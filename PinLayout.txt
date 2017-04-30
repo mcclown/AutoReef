@@ -1,0 +1,28 @@
+2 - #SDA
+3 - #SCL
+4 - 1 Wire Bus
+5 - DHT22
+6--
+7 - #CE1
+8 - #CE0
+9 - #MISO
+10 - #MOSI
+11 - #SCLK
+12 - 
+13 -
+14 - #TXD
+15 - #RXD
+16 - 
+17 - 
+18 -
+19 - 
+20 - relay1 
+21 - relay2
+22 - relay3
+23 - relay4
+24 - relay5
+25 - relay6
+26 - relay7
+27 - relay8
+
+
