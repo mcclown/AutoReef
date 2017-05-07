@@ -1,5 +1,6 @@
 from enum import Enum
 import yaml
+import os
 
 from nameko.events import event_handler
 from nameko.rpc import rpc
@@ -47,7 +48,7 @@ class GPIODevice:
         self.name = name
         self.pin = pin
         self.direction = direction
-        
+
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, self.direction)
 
@@ -112,7 +113,9 @@ class Relay(GPIODevice):
 
     @classmethod
     def _load_config(cls):
-        with open("../../config/relayConfig.yaml", "r") as stream:
+        path = os.path.join(os.path.dirname(__file__), "../../config/relayConfig.yaml")
+
+        with open(path, "r") as stream:
             try:
                 return yaml.load(stream)
             except yaml.YAMLError as exc:
@@ -128,12 +131,7 @@ class Relay(GPIODevice):
             pin = conf["pin"]
             relay_mode = getattr(RelayMode, conf["relay_mode"], None)
 
-            print("\nImported [" + name + "]")
-            print(device_type)
-            print(pin)
-            print(relay_mode)
-            
-            relay = cls(name, device_type, pin, relay_mode)
+            relay = cls(pin, relay_mode, device_type, name)
             relay_list.append(relay)
         
         return relay_list
