@@ -7,7 +7,7 @@ from nameko.dependency_providers import Config
 import os
 import glob
 import datetime
-
+from enum import Enum
 
 """Add support for a custom JSON decoding, for my new objects"""
 class CustomJSONEncoder(json.JSONEncoder):
@@ -17,19 +17,47 @@ class CustomJSONEncoder(json.JSONEncoder):
             return obj.__json__()
         return json.JSONEncoder.default(self, obj)
 
+class TempSensorState(Enum):
+
+    LOW_TEMP_CRITICAL = 1
+    LOW_TEMP_WARNING = 2
+    LOW_TEMP = 3
+    NORMAL_TEMP = 4
+    HIGH_TEMP = 5
+    HIGH_TEMP_WARNING = 6
+    HIGH_TEMP_CRITICAL = 7
+
 
 class TempSensor(ABC):
     'Abstract class for all different types of temperature sensors'
 
-    max_temp_critical = None
-    max_temp_warning = None
-    max_temp = 26.4
-    min_temp = 26.1
-    min_temp_warning = None
-    min_temp_critical = None
-
     timer_interval = 60
     dispatch = EventDispatcher()
+    config = Config()
+
+    @property
+    def high_temp_critical(self):
+        return float(self.config.get("high_temp_critical"))
+
+    @property
+    def high_temp_warning(self):
+        return float(self.config.get("high_temp_warning"))
+
+    @property
+    def high_temp(self):
+        return float(self.config.get("high_temp"))
+
+    @property
+    def low_temp(self): 
+        return float(self.config.get("low_temp"))
+
+    @property
+    def low_temp_warning(self):
+        return float(self.config.get("low_temp_warning"))
+    
+    @property
+    def low_temp_critical(self):
+        return float(self.config.get("low_temp_critical"))
 
     @rpc
     def get_temp(self):
@@ -45,9 +73,9 @@ class TempSensor(ABC):
         print("\nTime:" + str(time))
         print("Temp:"+ str(temp))
 
-        if self.max_temp != None and temp > self.max_temp:
+        if self.high_temp != None and temp > self.high_temp:
             state = "high_temp"
-        elif self.min_temp != None and temp < self.min_temp:
+        elif self.low_temp != None and temp < self.low_temp:
             state = "low_temp"
 
         self._dispatch_internal(time, temp, state)
@@ -68,7 +96,6 @@ class DS18B20(TempSensor):
     'Specific implementation, for the DS18B20 temperature probe'
     
     name = "DS18B20"
-    config = Config()
 
     @property
     def device_path(self):

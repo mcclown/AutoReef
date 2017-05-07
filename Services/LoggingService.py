@@ -31,10 +31,13 @@ class LoggingService:
 
     name = "LoggingService"
 
+    # Google docs details
     GDOCS_OAUTH_JSON = 'gdocs-config.json' 
-    
-    # Google Docs spreadsheet name.
     GDOCS_SPREADSHEET_NAME = 'Aquarium Params'
+
+    @event_handler("DS18B20", "high_temp_warning")
+    def high_temp_warning_handler(self, payload):
+        self.log(payload, "high_temp_warning")
 
     @event_handler("DS18B20", "high_temp")
     def high_temp_handler(self, payload):
@@ -43,6 +46,10 @@ class LoggingService:
     @event_handler("DS18B20", "low_temp")
     def low_temp_handler(self, payload):
         self.log(payload, "low_temp")
+
+    @event_handler("DS18B20", "low_temp_warning")
+    def low_temp_warning_handler(self, payload):
+        self.log(payload, "low_temp_warning")
 
     @event_handler("DS18B20", "log_temp")
     def norm_temp_handler(self, payload):
@@ -58,7 +65,7 @@ class LoggingService:
         print("State:" + message)
         
         spreadsheet = login_open_sheet(self.GDOCS_OAUTH_JSON, self.GDOCS_SPREADSHEET_NAME)
-        spreadsheet.worksheet('WaterTempProbes').append_row((datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f"), temp, message))
+        spreadsheet.worksheet('WaterTempProbes').append_row((time, temp, message))
     
         print('Wrote a row to {0}'.format(self.GDOCS_SPREADSHEET_NAME))
 
