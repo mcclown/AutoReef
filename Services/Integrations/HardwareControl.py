@@ -11,7 +11,16 @@ class GPIODevice:
     pin = None
     direction = None
     
-    state = None
+    @property
+    def state(self):
+        val = GPIO.input(self.pin)
+
+        if val == 0:
+            return State.LOW
+        elif val == 1:
+            return State.HIGH
+        else:
+            return State.ERROR
 
     def __init__(self, pin, direction):
         self.pin = pin
@@ -20,45 +29,39 @@ class GPIODevice:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, self.direction)
 
-        if self.direction == GPIO.OUT:
-            GPIO.output(self.pin, GPIO.LOW)
-            self.state = GPIO.LOW
-
     def on(self):
-        if self.direction == GPIO.IN:
-            """Throw exception here"""
-            pass
-
         GPIO.output(self.pin, GPIO.HIGH)
-        self.state = GPIO.HIGH
 
     def off(self):
-        if self.direction ==  GPIO.IN:
-            """throw exception here"""
-            pass
-
         GPIO.output(self.pin, GPIO.LOW)
-        self.state = GPIO.LOW
-
-    def read(self):
-        if self.direction == GPIO.OUT:
-            """throw exception"""
-            pass
-        
-        self.state = None
-        return GPIO.input(self.pin)
 
 class RelayMode(Enum):
     NORMAL_OPEN = 1
     NORMAL_CLOSED = 2
 
-class RelayState(Enum):
-    ON = 1
-    OFF = 2
+class State(Enum):
+    HIGH = 1
+    LOW = 0
+    ERROR = 2
 
 class Relay(GPIODevice):
 
     relay_mode = RelayMode.NORMAL_OPEN
+
+    @property
+    def state(self):
+        val = GPIO.input(self.pin)
+
+        if val == 0 and self.relay_mode == RelayMode.NORMAL_OPEN:
+            return State.LOW
+        elif val == 1 and self.relay_mode == RelayMode.NORMAL_OPEN:
+            return State.HIGH
+        elif val == 0 and self.relay_mode == RelayMode.NORMAL_CLOSED:
+            return State.HIGH
+        elif val == 1 and self.relay_mode == RelayMode.NORMAL_CLOSED:
+            return State.LOW
+        else:
+            return State.ERROR
 
     def __init__(self, pin, direction, relay_mode):
         
@@ -69,26 +72,18 @@ class Relay(GPIODevice):
         self.relay_mode = relay_mode
         super().__init__(pin, direction)
 
-        if relay_mode == RelayMode.NORMAL_OPEN:
-            self.state = RelayState.OFF
-        else:
-            self.state = RelayState.ON
-
     def on(self):
         if self.relay_mode == RelayMode.NORMAL_OPEN:
             super().on()
         else:
             super().off()
         
-        self.state = RelayState.ON
-
     def off(self):
         if self.relay_mode == RelayMode.NORMAL_OPEN:
             super().off()
         else:
             super().on()
 
-        self.state = RelayState.OFF
 
 
 

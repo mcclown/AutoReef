@@ -4,7 +4,7 @@ import argparse
 import datetime
 import os
 import RPi.GPIO as GPIO
-from Services.Integrations.RelayController import Relay, RelayMode
+from Services.Integrations.HardwareControl import Relay, RelayMode
 
 HEATER1_PIN=20
 HEATER2_PIN=21
