@@ -27,35 +27,35 @@ if os.geteuid() != 0:
 
 
 if args.heater1:
-    device = Relay(HEATER1_PIN, GPIO.OUT, RelayMode.NORMAL_CLOSED)
+    device = Relay(HEATER1_PIN, RelayMode.NORMAL_CLOSED)
     if args.desired_state == "on":
         device.on()
     else:
         device.off()
 
 if args.heater2:
-    device = Relay(HEATER2_PIN, GPIO.OUT, RelayMode.NORMAL_CLOSED)
+    device = Relay(HEATER2_PIN, RelayMode.NORMAL_CLOSED)
     if args.desired_state == "on":
         device.on()
     else:
         device.off()
 
 if args.pump:
-    device = Relay(PUMP_PIN, GPIO.OUT, RelayMode.NORMAL_CLOSED)
+    device = Relay(PUMP_PIN, RelayMode.NORMAL_CLOSED)
     if args.desired_state == "on":
         device.on()
     else:
         device.off()
 
 if args.skimmer:
-    device = Relay(SKIMMER_PIN, GPIO.OUT, RelayMode.NORMAL_CLOSED)
+    device = Relay(SKIMMER_PIN, RelayMode.NORMAL_CLOSED)
     if args.desired_state == "on":
         device.on()
     else:
         device.off()
 
 if args.lights:
-    device = Relay(LIGHT_PIN, GPIO.OUT, RelayMode.NORMAL_OPEN)
+    device = Relay(LIGHT_PIN, RelayMode.NORMAL_OPEN)
     if args.desired_state == "on":
         device.on()
     else:
@@ -66,6 +66,6 @@ if args.init:
 
     """Check if lights should be on"""
     if hour >= 9 and hour < 21:
-       device = Relay(LIGHT_PIN, GPIO.OUT, RelayMode.NORMAL_OPEN)
+       device = Relay(LIGHT_PIN, RelayMode.NORMAL_OPEN)
        device.on()
 

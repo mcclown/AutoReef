@@ -1,4 +1,5 @@
 from enum import Enum
+import yaml
 
 from nameko.events import event_handler
 from nameko.rpc import rpc
@@ -6,8 +7,28 @@ from nameko.dependency_providers import Config
 
 import RPi.GPIO as GPIO
 
-class GPIODevice:
 
+class RelayMode(Enum):
+    NORMAL_OPEN = 1
+    NORMAL_CLOSED = 2
+
+
+class State(Enum):
+    HIGH = 1
+    LOW = 0
+    ERROR = 2
+
+
+class DeviceType(Enum):
+    HEATER = 1
+    PUMP = 2
+    SKIMMER = 3
+    LIGHT = 4
+
+
+class GPIODevice:
+    
+    name = None
     pin = None
     direction = None
     
@@ -22,7 +43,8 @@ class GPIODevice:
         else:
             return State.ERROR
 
-    def __init__(self, pin, direction):
+    def __init__(self, pin, direction, name = None):
+        self.name = name
         self.pin = pin
         self.direction = direction
         
@@ -35,18 +57,11 @@ class GPIODevice:
     def off(self):
         GPIO.output(self.pin, GPIO.LOW)
 
-class RelayMode(Enum):
-    NORMAL_OPEN = 1
-    NORMAL_CLOSED = 2
-
-class State(Enum):
-    HIGH = 1
-    LOW = 0
-    ERROR = 2
 
 class Relay(GPIODevice):
 
     relay_mode = RelayMode.NORMAL_OPEN
+    device_type = None
 
     @property
     def state(self):
@@ -63,14 +78,11 @@ class Relay(GPIODevice):
         else:
             return State.ERROR
 
-    def __init__(self, pin, direction, relay_mode):
-        
-        if self.direction == GPIO.IN:
-            """Relays can't be input, so throw an exception if it's been configured that way"""
-            pass
-
+    def __init__(self, pin, relay_mode, device_type = None, name = None):
         self.relay_mode = relay_mode
-        super().__init__(pin, direction)
+        self.device_type = device_type
+
+        super().__init__(pin, GPIO.OUT, name)
 
     def on(self):
         if self.relay_mode == RelayMode.NORMAL_OPEN:
@@ -84,6 +96,46 @@ class Relay(GPIODevice):
         else:
             super().on()
 
+    @classmethod
+    def load_by_name(cls, name):
+        config = cls._load_config()
+        matches = [x for x in config if x["name"] == name]
 
+        return cls._config_to_obj(matches)
+
+    @classmethod
+    def load_by_type(cls, device_type):
+        config = cls._load_config()
+        matches = [x for x in config if ("DeviceType." + x["device_type"]) == str(device_type)]
+
+        return cls._config_to_obj(matches)
+
+    @classmethod
+    def _load_config(cls):
+        with open("../../config/relayConfig.yaml", "r") as stream:
+            try:
+                return yaml.load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+
+    @classmethod
+    def _config_to_obj(cls, conf_list):
+        relay_list = []    
+        
+        for conf in conf_list:
+            name = conf["name"]
+            device_type = getattr(DeviceType, conf["device_type"], None)
+            pin = conf["pin"]
+            relay_mode = getattr(RelayMode, conf["relay_mode"], None)
+
+            print("\nImported [" + name + "]")
+            print(device_type)
+            print(pin)
+            print(relay_mode)
+            
+            relay = cls(name, device_type, pin, relay_mode)
+            relay_list.append(relay)
+        
+        return relay_list
 
 

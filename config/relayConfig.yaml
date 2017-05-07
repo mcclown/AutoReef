@@ -1,0 +1,20 @@
+- name: "AquaOne 100W"
+  device_type: HEATER 
+  pin: 20
+  relay_mode: NORMAL_CLOSED
+- name: "AquaOne 50W"
+  device_type: HEATER
+  pin: 21
+  relay_mode: NORMAL_CLOSED
+- name: "Eheim Compact 2000+"
+  device_type: PUMP
+  pin: 22
+  relay_mode: NORMAL_CLOSED
+- name: "Tunze 9004"
+  device_type: SKIMMER
+  pin: 23
+  relay_mode: NORMAL_CLOSED
+- name: "2 x PL-18W"
+  device_type: LIGHT
+  pin: 25
+  relay_mode: NORMAL_OPEN
