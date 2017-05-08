@@ -14,8 +14,13 @@ from oauth2client.service_account import ServiceAccountCredentials
 from nameko.rpc import rpc
 from nameko.events import event_handler
 
+import Adafruit_CharLCD as LCD
+
 #Global spreasheet handle and its resource lock
 spreadsheet = None
+lcd = LCD.Adafruit_CharLCDPlate()
+lcd.clear()
+lcd.message("Autoreef init...")
 lock = threading.RLock()
 
 def login_open_sheet(oauth_key_file, spreadsheet):
@@ -85,8 +90,29 @@ class LoggingService:
                 print("Append error, logging on again")
                 spreadsheet = None
                 self.event_log_temp_monitor(payload)
+    
+    def log_temp_lcd(self, state, temp):
 
+        global lcd
+
+        if state == "log_temp":
+            #Green
+            lcd.set_color(0.0,1.0,0.0) 
+            lcd.clear()
+            lcd.message("Temp: " + str(temp))
+         
+        if state == "low_temp":
+            #Blue
+            lcd.set_color(0.0,0.0,1.0) 
+            lcd.clear()
+            lcd.message("Temp: " + str(temp))
         
+        if state == "high_temp":
+            #Red
+            lcd.set_color(1.0,0.0,0.0) 
+            lcd.clear()
+            lcd.message("Temp: " + str(temp))
+       
     def log_temp(self, payload, message):
 
         time = payload['time']
@@ -102,8 +128,12 @@ class LoggingService:
                 spreadsheet = login_open_sheet(self.GDOCS_OAUTH_JSON, self.GDOCS_SPREADSHEET_NAME)
         
             try:
+                
+                self.log_temp_lcd(message, temp)
+                
                 spreadsheet.worksheet('WaterTempProbes').append_row((time, temp, message))
                 print("Wrote temp log")
+                
             except:
                 print("Append error, logging on again")
                 spreadsheet = None
