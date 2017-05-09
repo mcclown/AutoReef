@@ -28,6 +28,7 @@ class TempMonitorService:
 
     @event_handler("DS18B20", "high_temp")
     def high_temp_handler(self, payload):
+        print("High temp state reached")
         heaters = Relay.load_by_type(DeviceType.HEATER)
         
         for device in heaters:
@@ -37,6 +38,7 @@ class TempMonitorService:
 
     @event_handler("DS18B20", "low_temp")
     def low_temp_handler(self, payload):
+        print("Low temp state reached")
         heaters = Relay.load_by_type(DeviceType.HEATER)
         
         for device in heaters:

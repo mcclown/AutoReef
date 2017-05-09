@@ -1,12 +1,13 @@
 from enum import Enum
 import yaml
 import os
-import time
+import datetime
 
-from nameko.events import event_handler, EventDispatcher
-from nameko.rpc import rpc
+from nameko.standalone.events import event_dispatcher
 
 import RPi.GPIO as GPIO
+
+rabbit_config = { 'AMQP_URI': "pyamqp://guest:guest@localhost" }
 
 
 class RelayMode(Enum):
@@ -26,7 +27,8 @@ class DeviceType(Enum):
     SKIMMER = 3
     LIGHT = 4
 
-class LogLevel:
+#TODO: Really need to move this somewhere else
+class LogLevel(Enum):
     DEBUG = 1
     INFO = 2
     WARN = 3
@@ -35,7 +37,7 @@ class LogLevel:
 
 class GPIODevice:
     
-    device_name = None
+    name = None
     pin = None
     direction = None
     
@@ -56,6 +58,7 @@ class GPIODevice:
         self.direction = direction
 
         GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
         GPIO.setup(self.pin, self.direction)
 
     def on(self):
@@ -67,9 +70,6 @@ class GPIODevice:
 
 class Relay(GPIODevice):
     
-    name = "Relay"
-    dispatch = EventDispatcher()
-
     relay_mode = RelayMode.NORMAL_OPEN
     device_type = None
 
@@ -95,37 +95,51 @@ class Relay(GPIODevice):
         super().__init__(pin, GPIO.OUT, name)
 
     def on(self):
-        try:
-            if self.relay_mode == RelayMode.NORMAL_OPEN:
-                super().on()
-            else:
-                super().off()
+        if self.state != State.HIGH:
+            try:
+                if self.relay_mode == RelayMode.NORMAL_OPEN:
+                    super().on()
+                else:
+                    super().off()
 
-            self._log(LogLevel.INFO, "Turned on")
-        except:
-            self._log(LogLevel.ERROR, "Unable to turn on")
+                self._log(LogLevel.INFO, "Turned on")
+            except:
+                self._log(LogLevel.ERROR, "Unable to turn on")
         
     def off(self):
-        try:
-            if self.relay_mode == RelayMode.NORMAL_OPEN:
-                super().off()
-            else:
-                super().on()
+        if self.state != State.LOW:
+            try:
+                if self.relay_mode == RelayMode.NORMAL_OPEN:
+                    super().off()
+                else:
+                    super().on()
 
-            self._log(LogLevel.INFO, "Turned off")
-        except:
-            self._log(LogLevel.ERROR, "Unable to turn off")
+                self._log(LogLevel.INFO, "Turned off")
+            except:
+                self._log(LogLevel.ERROR, "Unable to turn off")
 
     def _log(self, log_level, message):
-        time = datetime.datetime.now()
         
-        self.dispatch("event_log", {
+        global rabbit_config
+
+        time = datetime.datetime.now()
+
+        payload = {
             "time" : str(time),
             "log_level" : str(log_level),
             "device_type" : str(self.device_type),
-            "name" : self.device_name,
+            "name" : self.name,
             "message" : message
-            })
+            }
+
+        dispatch = event_dispatcher(rabbit_config)
+
+        dispatch("Relay", "event_log", payload)
+
+    @classmethod
+    def load_all(cls):
+        config = cls._load_config()
+        return cls._config_to_obj(config)
 
     @classmethod
     def load_by_name(cls, name):

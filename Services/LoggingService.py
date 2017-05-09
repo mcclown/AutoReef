@@ -72,12 +72,12 @@ class LoggingService:
 
     @event_handler("Relay", "event_log")
     def event_log_temp_monitor(self, payload):
-        time = payload["time"]
-        log_level = payload["log_level"]
-        device_type = payload["device_type"]
-        name = payload["name"]
-        message = payload["message"]
-        
+        time = str(payload["time"])
+        log_level = str(payload["log_level"])
+        device_type = str(payload["device_type"])
+        name = str(payload["name"])
+        message = str(payload["message"])
+
         global spreadsheet
         
         with lock:
@@ -138,9 +138,7 @@ class LoggingService:
             except:
                 print("Append error, logging on again")
                 spreadsheet = None
-                self.log_temp(payload, message)
-
-       
+                self.log_temp(payload, message)       
     
 
 
