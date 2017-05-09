@@ -32,11 +32,7 @@ class TempMonitorService:
         
         for device in heaters:
             if device.state == State.HIGH:
-                try:
-                    device.off()
-                    self.log(device, "Turned off")
-                except:
-                    self.log(device, "Unable to turn off")
+                device.off()
 
 
     @event_handler("DS18B20", "low_temp")
@@ -45,28 +41,10 @@ class TempMonitorService:
         
         for device in heaters:
             if device.state == State.LOW:
-                try:
-                    device.on()
-                    self.log(device, "Turned on")
-                except:
-                    self.log(device, "Unable to turn on")
-
+                device.on()
 
     @event_handler("DS18B20", "low_temp_warning")
     def low_temp_warning_handler(self, payload):
         pass
-
-    def log(self, device, message):
-        time = datetime.datetime.now()
-
-        print( str(time) + " - " + str(device.device_type) + "[" + device.name + "] - " + message )
-
-        self.dispatch("event_log", {
-            "time": str(time),
-            "device_type": str(device.device_type),
-            "name": device.name,
-            "message": message
-            })
-
 
 

@@ -70,9 +70,10 @@ class LoggingService:
 
     #Start Event Logging
 
-    @event_handler("TempMonitorService", "event_log")
+    @event_handler("Relay", "event_log")
     def event_log_temp_monitor(self, payload):
         time = payload["time"]
+        log_level = payload["log_level"]
         device_type = payload["device_type"]
         name = payload["name"]
         message = payload["message"]
@@ -84,7 +85,7 @@ class LoggingService:
                 spreadsheet = login_open_sheet(self.GDOCS_OAUTH_JSON, self.GDOCS_SPREADSHEET_NAME)
         
             try:
-                spreadsheet.worksheet('EventLog').append_row((time, name, device_type, message))
+                spreadsheet.worksheet('EventLog').append_row((time, name, device_type, message, log_level))
                 print("Wrote event log [" + name + "] " + message)
             except:
                 print("Append error, logging on again")

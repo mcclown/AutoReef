@@ -1,10 +1,10 @@
 from enum import Enum
 import yaml
 import os
+import time
 
-from nameko.events import event_handler
+from nameko.events import event_handler, EventDispatcher
 from nameko.rpc import rpc
-from nameko.dependency_providers import Config
 
 import RPi.GPIO as GPIO
 
@@ -26,10 +26,16 @@ class DeviceType(Enum):
     SKIMMER = 3
     LIGHT = 4
 
+class LogLevel:
+    DEBUG = 1
+    INFO = 2
+    WARN = 3
+    CRIT = 4
+    ERROR = 5
 
 class GPIODevice:
     
-    name = None
+    device_name = None
     pin = None
     direction = None
     
@@ -60,6 +66,9 @@ class GPIODevice:
 
 
 class Relay(GPIODevice):
+    
+    name = "Relay"
+    dispatch = EventDispatcher()
 
     relay_mode = RelayMode.NORMAL_OPEN
     device_type = None
@@ -86,16 +95,37 @@ class Relay(GPIODevice):
         super().__init__(pin, GPIO.OUT, name)
 
     def on(self):
-        if self.relay_mode == RelayMode.NORMAL_OPEN:
-            super().on()
-        else:
-            super().off()
+        try:
+            if self.relay_mode == RelayMode.NORMAL_OPEN:
+                super().on()
+            else:
+                super().off()
+
+            self._log(LogLevel.INFO, "Turned on")
+        except:
+            self._log(LogLevel.ERROR, "Unable to turn on")
         
     def off(self):
-        if self.relay_mode == RelayMode.NORMAL_OPEN:
-            super().off()
-        else:
-            super().on()
+        try:
+            if self.relay_mode == RelayMode.NORMAL_OPEN:
+                super().off()
+            else:
+                super().on()
+
+            self._log(LogLevel.INFO, "Turned off")
+        except:
+            self._log(LogLevel.ERROR, "Unable to turn off")
+
+    def _log(self, log_level, message):
+        time = datetime.datetime.now()
+        
+        self.dispatch("event_log", {
+            "time" : str(time),
+            "log_level" : str(log_level),
+            "device_type" : str(self.device_type),
+            "name" : self.device_name,
+            "message" : message
+            })
 
     @classmethod
     def load_by_name(cls, name):
