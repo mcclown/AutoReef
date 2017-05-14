@@ -1,4 +1,5 @@
-device_path: "/sys/bus/w1/devices/28-000008a9cabd"
+device_path_broken: "/sys/bus/w1/devices/28-000008a9cabd"
+device_path: "/sys/bus/w1/devices/28-000008a93f40"
 high_temp_critical: "28.0"
 high_temp_warning: "27.0"
 high_temp: "26.25"
