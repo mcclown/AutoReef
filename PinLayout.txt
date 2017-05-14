@@ -15,14 +15,14 @@
 16 - 
 17 - 
 18 -
-19 - 
+19 - relay7 
 20 - relay1 
 21 - relay2
 22 - relay3
 23 - relay4
 24 - relay5
 25 - relay6
-26 - relay7
+26 - #fried
 27 - relay8
 
 

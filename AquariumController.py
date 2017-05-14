@@ -11,7 +11,8 @@ parser.add_argument("-p", "--pump", action="store_true")
 parser.add_argument("-s", "--skimmer", action="store_true")
 parser.add_argument("-l", "--lights", action="store_true")
 parser.add_argument("--init", action="store_true")
-parser.add_argument("desired_state", help="on|off")
+parser.add_argument("desired_state", help="on|off", nargs="?")
+parser.add_argument("device_name", default=None, nargs="?")
 args = parser.parse_args()
 
 
@@ -28,6 +29,19 @@ def manage_relay_by_type(device_type, desired_state):
         else:
             x.off()
 
+def manage_relay_by_name(device_name, desired_state):
+
+    relays = Relay.load_by_name(device_name)
+
+    for x in relays:
+        if desired_state == "on":
+            x.on()
+        else:
+            x.off()
+
+if args.device_name != None:
+
+    manage_relay_by_name(args.device_name, args.desired_state)
 
 if args.heater:
     manage_relay_by_type(DeviceType.HEATER, args.desired_state)
@@ -46,5 +60,7 @@ if args.init:
 
     """Check if lights should be on"""
     if hour >= 9 and hour < 21:
-       manage_relay_by_type(DeviceType.LIGHT, "on")
+        manage_relay_by_name("2 x PL-18W", "on")
+    else:
+        manage_relay_by_name("Refugium LED", "on")
 

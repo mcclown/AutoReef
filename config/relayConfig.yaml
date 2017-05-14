@@ -18,3 +18,7 @@
   device_type: LIGHT
   pin: 25
   relay_mode: NORMAL_OPEN
+- name: "Refugium LED"
+  device_type: LIGHT
+  pin: 19
+  relay_mode: NORMAL_OPEN
