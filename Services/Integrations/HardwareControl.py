@@ -4,10 +4,9 @@ import os
 import datetime
 
 from nameko.standalone.events import event_dispatcher
+from common import rabbit_config, load_config
 
 import RPi.GPIO as GPIO
-
-rabbit_config = { 'AMQP_URI': "pyamqp://guest:guest@localhost" }
 
 
 class RelayMode(Enum):
@@ -72,6 +71,7 @@ class Relay(GPIODevice):
     
     relay_mode = RelayMode.NORMAL_OPEN
     device_type = None
+    config_file="relayConfig.yaml"
 
     @property
     def state(self):
@@ -138,32 +138,22 @@ class Relay(GPIODevice):
 
     @classmethod
     def load_all(cls):
-        config = cls._load_config()
+        config = load_config(cls.config_file)
         return cls._config_to_obj(config)
 
     @classmethod
     def load_by_name(cls, name):
-        config = cls._load_config()
+        config = load_config(cls.config_file)
         matches = [x for x in config if x["name"] == name]
 
         return cls._config_to_obj(matches)
 
     @classmethod
     def load_by_type(cls, device_type):
-        config = cls._load_config()
+        config = load_config(cls.config_file)
         matches = [x for x in config if ("DeviceType." + x["device_type"]) == str(device_type)]
 
         return cls._config_to_obj(matches)
-
-    @classmethod
-    def _load_config(cls):
-        path = os.path.join(os.path.dirname(__file__), "../../config/relayConfig.yaml")
-
-        with open(path, "r") as stream:
-            try:
-                return yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
 
     @classmethod
     def _config_to_obj(cls, conf_list):

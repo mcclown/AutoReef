@@ -7,7 +7,9 @@ from nameko.dependency_providers import Config
 import os
 import glob
 import datetime
+import yaml
 from enum import Enum
+from common import load_config
 
 """Add support for a custom JSON decoding, for my new objects"""
 class CustomJSONEncoder(json.JSONEncoder):
@@ -33,31 +35,14 @@ class TempSensor(ABC):
 
     timer_interval = 60
     dispatch = EventDispatcher()
-    config = Config()
+    config_file="tempProbe1.yaml"
 
-    @property
-    def high_temp_critical(self):
-        return float(self.config.get("high_temp_critical"))
-
-    @property
-    def high_temp_warning(self):
-        return float(self.config.get("high_temp_warning"))
-
-    @property
-    def high_temp(self):
-        return float(self.config.get("high_temp"))
-
-    @property
-    def low_temp(self): 
-        return float(self.config.get("low_temp"))
-
-    @property
-    def low_temp_warning(self):
-        return float(self.config.get("low_temp_warning"))
-    
-    @property
-    def low_temp_critical(self):
-        return float(self.config.get("low_temp_critical"))
+    high_temp_critical = None
+    high_temp_warning = None
+    high_temp = None
+    low_temp = None
+    low_temp_warning = None
+    low_temp_critical = None
 
     @rpc
     def get_temp(self):
@@ -65,6 +50,8 @@ class TempSensor(ABC):
 
     @timer(interval = timer_interval)
     def monitor_temp(self):
+
+        self._load_config()
 
         time = datetime.datetime.now()
         temp = self._get_temp_internal()
@@ -91,6 +78,16 @@ class TempSensor(ABC):
             "temp": temp
             })
 
+    def _load_config(self):
+        conf = load_config(self.config_file)
+
+        self.high_temp_critical = conf["high_temp_critical"]
+        self.high_temo_warning = conf["high_temp_warning"]
+        self.high_temp = conf["high_temp"]
+        self.low_temp = conf["low_temp"]
+        self.low_temp_warning = conf["low_temp_warning"]
+        self.low_temp_critical = conf["low_temp_critical"]
+
 
 class DS18B20(TempSensor):
     'Specific implementation, for the DS18B20 temperature probe'
@@ -99,7 +96,8 @@ class DS18B20(TempSensor):
 
     @property
     def device_path(self):
-        return self.config.get("device_path")
+        conf = load_config(self.config_file)
+        return conf["device_path"]
 
     def __json__(self):
         return {"name" : self.name, "device_path" : self.device_path}
