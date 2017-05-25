@@ -48,23 +48,23 @@ class LoggingService:
     
     #Start Temp Logging
 
-    @event_handler("DS18B20", "high_temp_warning")
+    @event_handler("TempProbeService", "high_temp_warning")
     def high_temp_warning_handler(self, payload):
         self.log_temp(payload, "high_temp_warning")
 
-    @event_handler("DS18B20", "high_temp")
+    @event_handler("TempProbeService", "high_temp")
     def high_temp_handler(self, payload):
         self.log_temp(payload, "high_temp")        
 
-    @event_handler("DS18B20", "low_temp")
+    @event_handler("TempProbeService", "low_temp")
     def low_temp_handler(self, payload):
         self.log_temp(payload, "low_temp")
 
-    @event_handler("DS18B20", "low_temp_warning")
+    @event_handler("TempProbeService", "low_temp_warning")
     def low_temp_warning_handler(self, payload):
         self.log_temp(payload, "low_temp_warning")
 
-    @event_handler("DS18B20", "log_temp")
+    @event_handler("TempProbeService", "log_temp")
     def norm_temp_handler(self, payload):
         self.log_temp(payload, "log_temp")
 

@@ -31,78 +31,25 @@ class TempSensorState(Enum):
 
 
 class TempSensor(ABC):
-    'Abstract class for all different types of temperature sensors'
-
-    timer_interval = 60
-    dispatch = EventDispatcher()
-    config_file="tempProbe1.yaml"
-
-    high_temp_critical = None
-    high_temp_warning = None
-    high_temp = None
-    low_temp = None
-    low_temp_warning = None
-    low_temp_critical = None
-
-    @rpc
-    def get_temp(self):
-        return self._get_temp_internal()
-
-    @timer(interval = timer_interval)
-    def monitor_temp(self):
-
-        self._load_config()
-
-        time = datetime.datetime.now()
-        temp = self._get_temp_internal()
-        state = 'log_temp'
-
-        print("\nTime:" + str(time))
-        print("Temp:"+ str(temp))
-
-        if self.high_temp != None and temp > self.high_temp:
-            state = "high_temp"
-        elif self.low_temp != None and temp < self.low_temp:
-            state = "low_temp"
-
-        self._dispatch_internal(time, temp, state)
 
     @abstractmethod
-    def _get_temp_internal(self):
+    def get_temp(self):
         pass
-
-    def _dispatch_internal(self, time, temp, state):
-        print("State:" + state)
-        self.dispatch(state, {
-            "time": str(time), 
-            "temp": temp
-            })
-
-    def _load_config(self):
-        conf = load_config(self.config_file)
-
-        self.high_temp_critical = conf["high_temp_critical"]
-        self.high_temo_warning = conf["high_temp_warning"]
-        self.high_temp = conf["high_temp"]
-        self.low_temp = conf["low_temp"]
-        self.low_temp_warning = conf["low_temp_warning"]
-        self.low_temp_critical = conf["low_temp_critical"]
 
 
 class DS18B20(TempSensor):
-    'Specific implementation, for the DS18B20 temperature probe'
-    
-    name = "DS18B20"
 
-    @property
-    def device_path(self):
-        conf = load_config(self.config_file)
-        return conf["device_path"]
+    device_path = None
+    name = None
+
+    def __init__(self, device_path, name=None):
+        self.device_path = device_path
+        self.name = name
 
     def __json__(self):
         return {"name" : self.name, "device_path" : self.device_path}
         
-    def _get_temp_internal(self):
+    def get_temp(self):
         lines = self.__get_temp_raw()
         while lines[0].strip()[-3:] != 'YES':
             time.sleep(0.2)
