@@ -43,7 +43,7 @@ class LoggingService:
     name = "LoggingService"
 
     # Google docs details
-    GDOCS_OAUTH_JSON = os.path.join(os.path.dirname(__file__), "../config/gdocs-config.json")
+    GDOCS_OAUTH_JSON = os.path.join(os.path.dirname(__file__), "../../config/gdocs-config.json")
     GDOCS_SPREADSHEET_NAME = 'Aquarium Params'
     
     #Start Temp Logging

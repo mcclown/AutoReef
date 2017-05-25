@@ -13,7 +13,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from nameko.rpc import rpc
 from nameko.events import event_handler, EventDispatcher
 
-from Services.Integrations.HardwareControl import Relay, RelayMode, State, DeviceType
+from AutoReef.Services.Integrations.HardwareControl import Relay, RelayMode, State, DeviceType
 import RPi.GPIO as GPIO
 
 

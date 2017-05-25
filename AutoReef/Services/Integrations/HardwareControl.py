@@ -4,7 +4,7 @@ import os
 import datetime
 
 from nameko.standalone.events import event_dispatcher
-from common import rabbit_config, load_config
+from AutoReef.common import rabbit_config, load_config
 
 import RPi.GPIO as GPIO
 
@@ -120,8 +120,6 @@ class Relay(GPIODevice):
 
     def _log(self, log_level, message):
         
-        global rabbit_config
-
         time = datetime.datetime.now()
 
         payload = {

@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
+
 from nameko.cli.run import run
 
-from common import rabbit_config
-from Services.LoggingService import LoggingService
-from Services.TempMonitorService import TempMonitorService
-from Services.Integrations.TempSensor import DS18B20
+from AutoReef.common import rabbit_config
+from AutoReef.Services.LoggingService import LoggingService
+from AutoReef.Services.TempMonitorService import TempMonitorService
+from AutoReef.Services.Integrations.TempSensor import DS18B20
 
 services = []
 services.append(LoggingService)

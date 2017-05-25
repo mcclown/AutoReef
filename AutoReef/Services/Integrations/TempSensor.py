@@ -9,7 +9,7 @@ import glob
 import datetime
 import yaml
 from enum import Enum
-from common import load_config
+from AutoReef.common import load_config
 
 """Add support for a custom JSON decoding, for my new objects"""
 class CustomJSONEncoder(json.JSONEncoder):
