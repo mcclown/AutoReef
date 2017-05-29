@@ -4,6 +4,6 @@ device_name: "DT Temp Probe"
 high_temp_critical: 29.0
 high_temp_warning: 28.0
 high_temp: 27.0
-low_temp: 25.0
-low_temp_warning: 24.0 
-low_temp_critical: 23.0
+low_temp: 25.5
+low_temp_warning: 25.0 
+low_temp_critical: 24.0

@@ -3,9 +3,7 @@
 from nameko.cli.run import run
 
 from AutoReef.common import rabbit_config
-from AutoReef.Services.LoggingService import LoggingService
-from AutoReef.Services.TempMonitorService import TempMonitorService
-from AutoReef.Services.TempProbeService import TempProbeService
+from AutoReef.services import LoggingService, TempMonitorService, TempProbeService
 
 services = []
 services.append(LoggingService)
