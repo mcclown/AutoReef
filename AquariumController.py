@@ -3,7 +3,7 @@
 import argparse
 import datetime
 import os
-from AutoReef.Services.Integrations.HardwareControl import Relay, State, DeviceType
+from AutoReef.integrations import Relay, State, DeviceType
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--heater", action="store_true")
