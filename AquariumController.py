@@ -23,6 +23,9 @@ def manage_relay_by_type(device_type, desired_state):
     
     relays = Relay.load_by_type(device_type)
 
+    if len(relays) == 0:
+        exit("No devices of that type found")
+
     for x in relays:
         if desired_state == "on":
             x.on()
@@ -32,6 +35,9 @@ def manage_relay_by_type(device_type, desired_state):
 def manage_relay_by_name(device_name, desired_state):
 
     relays = Relay.load_by_name(device_name)
+
+    if len(relays) == 0:
+        exit("No devices found with that name")
 
     for x in relays:
         if desired_state == "on":

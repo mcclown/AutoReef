@@ -162,21 +162,32 @@ class TempMonitorService:
     @event_handler("DS18B20", "high_temp")
     def high_temp_handler(self, payload):
         print("High temp state reached")
-        heaters = Relay.load_by_type(DeviceType.HEATER)
-        
+
+        heaters = Relay.load_by_name("AquaOne 100W")
         for device in heaters:
             if device.state == State.HIGH:
                 device.off()
+
+        heaters = Relay.load_by_name("AquaOne 50W")
+        for device in heaters:
+            if device.state == State.LOW:
+                device.on()
+
 
 
     @event_handler("DS18B20", "low_temp")
     def low_temp_handler(self, payload):
         print("Low temp state reached")
-        heaters = Relay.load_by_type(DeviceType.HEATER)
-        
+
+        heaters = Relay.load_by_name("AquaOne 100W")
         for device in heaters:
             if device.state == State.LOW:
                 device.on()
+
+        heaters = Relay.load_by_name("AquaOne 50W")
+        for device in heaters:
+            if device.state == State.HIGH:
+                device.off()
 
     @event_handler("DS18B20", "low_temp_warning")
     def low_temp_warning_handler(self, payload):

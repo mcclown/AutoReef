@@ -7,7 +7,7 @@ from AutoReef.services import LoggingService, TempMonitorService, TempProbeServi
 
 services = []
 services.append(LoggingService)
-#services.append(TempMonitorService)
+services.append(TempMonitorService)
 services.append(TempProbeService)
 
 run(services, rabbit_config)
