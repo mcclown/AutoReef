@@ -155,11 +155,11 @@ class TempMonitorService:
     name = "TempMonitorService"
     dispatch = EventDispatcher()
 
-    @event_handler("DS18B20", "high_temp_warning")
+    @event_handler("TempProbeService", "high_temp_warning")
     def high_temp_warning_handler(self, payload):
         pass
 
-    @event_handler("DS18B20", "high_temp")
+    @event_handler("TempProbeService", "high_temp")
     def high_temp_handler(self, payload):
         print("High temp state reached")
 
@@ -175,7 +175,7 @@ class TempMonitorService:
 
 
 
-    @event_handler("DS18B20", "low_temp")
+    @event_handler("TempProbeService", "low_temp")
     def low_temp_handler(self, payload):
         print("Low temp state reached")
 
@@ -189,7 +189,7 @@ class TempMonitorService:
             if device.state == State.HIGH:
                 device.off()
 
-    @event_handler("DS18B20", "low_temp_warning")
+    @event_handler("TempProbeService", "low_temp_warning")
     def low_temp_warning_handler(self, payload):
         pass
 
