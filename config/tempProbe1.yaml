@@ -3,7 +3,7 @@ device_path: "/sys/bus/w1/devices/28-000008a93f40"
 device_name: "DT Temp Probe"
 high_temp_critical: 29.0
 high_temp_warning: 28.0
-high_temp: 26.2
-low_temp: 25.8
+high_temp: 25.5
+low_temp: 25.25
 low_temp_warning: 25.0 
 low_temp_critical: 24.0
