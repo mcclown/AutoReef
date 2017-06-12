@@ -16,6 +16,7 @@ from nameko.standalone.events import event_dispatcher
 from nameko.events import event_handler
 
 from AutoReef.common import rabbit_config, load_config
+from AutoReef.events import LogLevel, EventQueue
 
 import RPi.GPIO as GPIO
 import Adafruit_CharLCD as LCD
@@ -34,20 +35,12 @@ class State(Enum):
     LOW = 0
     ERROR = 2
 
-
 class DeviceType(Enum):
     HEATER = 1
     PUMP = 2
     SKIMMER = 3
     LIGHT = 4
-
-#TODO: Really need to move this somewhere else
-class LogLevel(Enum):
-    DEBUG = 1
-    INFO = 2
-    WARN = 3
-    CRIT = 4
-    ERROR = 5
+    TEMP_PROBE = 5
 
 class GPIODevice:
     
@@ -198,14 +191,6 @@ lock = threading.RLock()
 #CYAN lcd.set_color(0.0, 1.0, 1.0)
 #MAGENTA lcd.set_color(1.0, 0.0, 1.0)
 #WHITE lcd.set_color(1.0, 1.0, 1.0)
-
-
-class EventQueue:
-    
-    _event_list = []
-
-    def add_event(self):
-        pass
 
 
 class LCDController(EventQueue):
