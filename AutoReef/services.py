@@ -7,6 +7,7 @@ import os
 import glob
 import threading
 from enum import Enum
+from decimal import *
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -50,6 +51,8 @@ def login_open_sheet(oauth_key_file, spreadsheet):
 class LoggingService:
 
     name = "LoggingService"
+
+    print("Init " + name)
 
     # Google docs details
     GDOCS_OAUTH_JSON = os.path.join(os.path.dirname(__file__), "../config/gdocs-config.json")
@@ -96,8 +99,9 @@ class LoggingService:
             try:
                 spreadsheet.worksheet('EventLog').append_row((time, name, device_type, message, log_level))
                 print("Wrote event log [" + name + "] " + message)
-            except:
+            except Exception as e:
                 print("Append error, logging on again")
+                print(e)
                 spreadsheet = None
                 self.event_log_temp_monitor(payload)
     
@@ -111,13 +115,13 @@ class LoggingService:
             lcd.clear()
             lcd.message("Temp: " + str(temp))
          
-        if state == "low_temp":
+        if state.startswith("low"):
             #Blue
             lcd.set_color(0.0,0.0,1.0) 
             lcd.clear()
             lcd.message("Temp: " + str(temp))
         
-        if state == "high_temp":
+        if state.startswith("high"):
             #Red
             lcd.set_color(1.0,0.0,0.0) 
             lcd.clear()
@@ -128,9 +132,9 @@ class LoggingService:
         time = payload['time']
         temp = payload['temp']
 
-        print("\nTime:" + time)
-        print("Temp:" + str(temp))
-        print("State:" + message)
+        print("\nLog Time:" + time)
+        print("Log Temp:" + str(temp))
+        print("Log State:" + message)
         global spreadsheet
         
         with lock:
@@ -144,8 +148,9 @@ class LoggingService:
                 spreadsheet.worksheet('WaterTempProbes').append_row((time, temp, message))
                 print("Wrote temp log")
                 
-            except:
+            except Exception as e:
                 print("Append error, logging on again")
+                print(e)
                 spreadsheet = None
                 self.log_temp(payload, message)       
     
@@ -153,11 +158,25 @@ class LoggingService:
 class TempMonitorService:
 
     name = "TempMonitorService"
+
+    print("Init " + name)
+
     dispatch = EventDispatcher()
 
     @event_handler("TempProbeService", "high_temp_warning")
     def high_temp_warning_handler(self, payload):
-        pass
+        print("High(Warning) temp state reached")
+
+        heaters = Relay.load_by_name("AquaOne 100W")
+        for device in heaters:
+            if device.state == State.HIGH:
+                device.off()
+
+        heaters = Relay.load_by_name("AquaOne 50W")
+        for device in heaters:
+            if device.state == State.HIGH:
+                device.off()
+
 
     @event_handler("TempProbeService", "high_temp")
     def high_temp_handler(self, payload):
@@ -189,9 +208,21 @@ class TempMonitorService:
             if device.state == State.HIGH:
                 device.off()
 
+
     @event_handler("TempProbeService", "low_temp_warning")
     def low_temp_warning_handler(self, payload):
-        pass
+        print("Low(Warning) temp state reached")
+
+        heaters = Relay.load_by_name("AquaOne 100W")
+        for device in heaters:
+            if device.state == State.LOW:
+                device.on()
+
+        heaters = Relay.load_by_name("AquaOne 50W")
+        for device in heaters:
+            if device.state == State.LOW:
+                device.on()
+
 
 
 
@@ -199,7 +230,8 @@ class TempMonitorService:
 class TempProbeService:
     name = "TempProbeService"
 
-    'Abstract class for all different types of temperature sensors'
+    print("Init " + name)
+
 
     timer_interval = 60
     dispatch = EventDispatcher()
@@ -228,19 +260,28 @@ class TempProbeService:
         time = datetime.datetime.now()
         temp = self.get_temp()
         state = 'log_temp'
+        print("\nProbe Time:" + str(time))
+        print("Probe Temp:"+ str(temp))
+        
 
-        print("\nTime:" + str(time))
-        print("Temp:"+ str(temp))
-
-        if self.high_temp != None and temp > self.high_temp:
-            state = "high_temp"
-        elif self.low_temp != None and temp < self.low_temp:
-            state = "low_temp"
-
+        if temp < self.low_temp_critical:
+            state = "low_temp_critical"
+        elif self.low_temp_critical >= temp < temp.low_temp_warning:
+            state = "low_temp_warning"
+        elif self.low_temp_warning >= temp < temp.low_temp:
+            state = 'low_temp'
+        elif self.low_temp >= temp < self.high_temp:
+            state = 'log_temp'
+        elif self.high_temp >= temp < self.high_temp_warning:
+            state = 'high_temp'
+        elif self.high_temp_warning >= temp < self.high_temp_critical:
+            state = 'high_temp_warning'
+        else:
+            state = 'high_temp_critical'
+        
         self._dispatch_internal(time, temp, state)
 
     def _dispatch_internal(self, time, temp, state):
-        print("State:" + state)
         self.dispatch(state, {
             "time": str(time), 
             "temp": temp
@@ -257,14 +298,14 @@ class TempProbeService:
         #Only one type of temp probe, currently. This will have to be made more intelligent, in the future
         self.__temp_probe = DS18B20(self.__conf["device_path"], self.__conf["device_name"])
 
-        self.high_temp_critical = self.__conf["high_temp_critical"]
-        self.high_temo_warning = self.__conf["high_temp_warning"]
-        self.high_temp = self.__conf["high_temp"]
-        self.low_temp = self.__conf["low_temp"]
-        self.low_temp_warning = self.__conf["low_temp_warning"]
-        self.low_temp_critical = self.__conf["low_temp_critical"]
+        self.high_temp_critical = self.__conf["high_temp_critical"] or 99.0
+        self.high_temp_warning = self.__conf["high_temp_warning"] or 99.0
+        self.high_temp = self.__conf["high_temp"] or 99.0
+        self.low_temp = self.__conf["low_temp"] or 0.0
+        self.low_temp_warning = self.__conf["low_temp_warning"] or 0.0
+        self.low_temp_critical = self.__conf["low_temp_critical"] or 0.0
+
+            
 
 
-
-
-
+ 
