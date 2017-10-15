@@ -165,7 +165,7 @@ class TempMonitorService:
 
     @event_handler("TempProbeService", "high_temp_warning")
     def high_temp_warning_handler(self, payload):
-        print("High(Warning) temp state reached")
+        print("\nHigh(Warning) temp state reached")
 
         heaters = Relay.load_by_name("AquaOne 100W")
         for device in heaters:
@@ -180,7 +180,7 @@ class TempMonitorService:
 
     @event_handler("TempProbeService", "high_temp")
     def high_temp_handler(self, payload):
-        print("High temp state reached")
+        print("\nHigh temp state reached")
 
         heaters = Relay.load_by_name("AquaOne 100W")
         for device in heaters:
@@ -196,7 +196,7 @@ class TempMonitorService:
 
     @event_handler("TempProbeService", "low_temp")
     def low_temp_handler(self, payload):
-        print("Low temp state reached")
+        print("\nLow temp state reached")
 
         heaters = Relay.load_by_name("AquaOne 100W")
         for device in heaters:
@@ -211,7 +211,7 @@ class TempMonitorService:
 
     @event_handler("TempProbeService", "low_temp_warning")
     def low_temp_warning_handler(self, payload):
-        print("Low(Warning) temp state reached")
+        print("\nLow(Warning) temp state reached")
 
         heaters = Relay.load_by_name("AquaOne 100W")
         for device in heaters:
@@ -266,19 +266,20 @@ class TempProbeService:
 
         if temp < self.low_temp_critical:
             state = "low_temp_critical"
-        elif self.low_temp_critical >= temp < temp.low_temp_warning:
+        elif self.low_temp_critical <= temp < self.low_temp_warning:
             state = "low_temp_warning"
-        elif self.low_temp_warning >= temp < temp.low_temp:
+        elif self.low_temp_warning <= temp < self.low_temp:
             state = 'low_temp'
-        elif self.low_temp >= temp < self.high_temp:
+        elif self.low_temp <= temp < self.high_temp:
             state = 'log_temp'
-        elif self.high_temp >= temp < self.high_temp_warning:
+        elif self.high_temp <= temp < self.high_temp_warning:
             state = 'high_temp'
-        elif self.high_temp_warning >= temp < self.high_temp_critical:
+        elif self.high_temp_warning <= temp < self.high_temp_critical:
             state = 'high_temp_warning'
         else:
             state = 'high_temp_critical'
-        
+       
+        print("Probe State: " + state)
         self._dispatch_internal(time, temp, state)
 
     def _dispatch_internal(self, time, temp, state):
