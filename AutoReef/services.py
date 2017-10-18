@@ -59,6 +59,9 @@ class LoggingService:
     GDOCS_SPREADSHEET_NAME = 'Aquarium Params'
     
     #Start Temp Logging
+    @event_handler("TempProbeService", "high_temp_critical")
+    def high_temp_warning_handler(self, payload):
+        self.log_temp(payload, "high_temp_critical")
 
     @event_handler("TempProbeService", "high_temp_warning")
     def high_temp_warning_handler(self, payload):
@@ -75,6 +78,10 @@ class LoggingService:
     @event_handler("TempProbeService", "low_temp_warning")
     def low_temp_warning_handler(self, payload):
         self.log_temp(payload, "low_temp_warning")
+
+    @event_handler("TempProbeService", "low_temp_critical")
+    def low_temp_warning_handler(self, payload):
+        self.log_temp(payload, "low_temp_critical")
 
     @event_handler("TempProbeService", "log_temp")
     def norm_temp_handler(self, payload):
