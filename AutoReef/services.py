@@ -60,7 +60,7 @@ class LoggingService:
     
     #Start Temp Logging
     @event_handler("TempProbeService", "high_temp_critical")
-    def high_temp_warning_handler(self, payload):
+    def high_temp_critical_handler(self, payload):
         self.log_temp(payload, "high_temp_critical")
 
     @event_handler("TempProbeService", "high_temp_warning")
@@ -80,7 +80,7 @@ class LoggingService:
         self.log_temp(payload, "low_temp_warning")
 
     @event_handler("TempProbeService", "low_temp_critical")
-    def low_temp_warning_handler(self, payload):
+    def low_temp_critical_handler(self, payload):
         self.log_temp(payload, "low_temp_critical")
 
     @event_handler("TempProbeService", "log_temp")
