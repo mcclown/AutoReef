@@ -10,6 +10,7 @@ parser.add_argument("-t", "--heater", action="store_true")
 parser.add_argument("-p", "--pump", action="store_true")
 parser.add_argument("-s", "--skimmer", action="store_true")
 parser.add_argument("-l", "--lights", action="store_true")
+parser.add_argument("-f", "--fan", action="store_true")
 parser.add_argument("--init", action="store_true")
 parser.add_argument("desired_state", help="on|off", nargs="?")
 parser.add_argument("device_name", default=None, nargs="?")
@@ -60,6 +61,10 @@ if args.skimmer:
 
 if args.lights:
     manage_relay_by_type(DeviceType.LIGHT, args.desired_state)
+
+if args.fan:
+    manage_relay_by_type(DeviceType.FAN, args.desired_state)
+
 
 if args.init:
     hour = datetime.datetime.now().hour

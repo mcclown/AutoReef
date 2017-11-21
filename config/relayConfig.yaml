@@ -14,11 +14,7 @@
   device_type: SKIMMER
   pin: 23
   relay_mode: NORMAL_CLOSED
-- name: "2 x PL-18W"
-  device_type: LIGHT
-  pin: 25
-  relay_mode: NORMAL_OPEN
-- name: "Refugium LED"
-  device_type: LIGHT
+- name: "Refugium Fan"
+  device_type: FAN
   pin: 19
   relay_mode: NORMAL_OPEN

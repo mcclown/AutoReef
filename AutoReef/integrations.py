@@ -40,6 +40,7 @@ class DeviceType(Enum):
     PUMP = 2
     SKIMMER = 3
     LIGHT = 4
+    FAN = 6
 
 #TODO: Really need to move this somewhere else
 class LogLevel(Enum):

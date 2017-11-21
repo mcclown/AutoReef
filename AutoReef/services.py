@@ -16,7 +16,7 @@ from nameko.rpc import rpc
 from nameko.events import EventDispatcher, event_handler
 from nameko.timer import timer
 
-from AutoReef.integrations import Relay, RelayMode, State, DeviceType, TempSensor, DS18B20
+from AutoReef.integrations import LogLevel, Relay, RelayMode, State, DeviceType, TempSensor, DS18B20
 from AutoReef.common import load_config
 
 import RPi.GPIO as GPIO
@@ -28,9 +28,15 @@ import Adafruit_CharLCD as LCD
 
 #Global spreasheet handle and its resource lock
 spreadsheet = None
-lcd = LCD.Adafruit_CharLCDPlate()
-lcd.clear()
-lcd.message("Autoreef init...")
+
+def lcd_init():
+    lcd = LCD.Adafruit_CharLCDPlate()
+    lcd.clear()
+    lcd.message("Autoreef init...")
+    return lcd
+
+lcd_init()
+
 lock = threading.RLock()
 
 def login_open_sheet(oauth_key_file, spreadsheet):
@@ -61,31 +67,31 @@ class LoggingService:
     #Start Temp Logging
     @event_handler("TempProbeService", "high_temp_critical")
     def high_temp_critical_handler(self, payload):
-        self.log_temp(payload, "high_temp_critical")
+        self.log_temp(payload, "high_temp_critical", LogLevel.ERROR)
 
     @event_handler("TempProbeService", "high_temp_warning")
     def high_temp_warning_handler(self, payload):
-        self.log_temp(payload, "high_temp_warning")
+        self.log_temp(payload, "high_temp_warning", LogLevel.CRIT)
 
     @event_handler("TempProbeService", "high_temp")
     def high_temp_handler(self, payload):
-        self.log_temp(payload, "high_temp")        
+        self.log_temp(payload, "high_temp", LogLevel.WARN)        
 
     @event_handler("TempProbeService", "low_temp")
     def low_temp_handler(self, payload):
-        self.log_temp(payload, "low_temp")
+        self.log_temp(payload, "low_temp", LogLevel.WARN)
 
     @event_handler("TempProbeService", "low_temp_warning")
     def low_temp_warning_handler(self, payload):
-        self.log_temp(payload, "low_temp_warning")
+        self.log_temp(payload, "low_temp_warning", LogLevel.CRIT)
 
     @event_handler("TempProbeService", "low_temp_critical")
     def low_temp_critical_handler(self, payload):
-        self.log_temp(payload, "low_temp_critical")
+        self.log_temp(payload, "low_temp_critical", LogLevel.ERROR)
 
-    @event_handler("TempProbeService", "log_temp")
+    @event_handler("TempProbeService", "norm_temp")
     def norm_temp_handler(self, payload):
-        self.log_temp(payload, "log_temp")
+        self.log_temp(payload, "norm_temp", LogLevel.INFO)
 
     #Start Event Logging
 
@@ -112,29 +118,27 @@ class LoggingService:
                 spreadsheet = None
                 self.event_log_temp_monitor(payload)
     
-    def log_temp_lcd(self, state, temp):
+    def log_temp_lcd(self, state, temp, log_level):
 
-        global lcd
+        lcd = lcd_init()
+        lcd.clear()
+        lcd.message("Temp: " + str(temp))
 
-        if state == "log_temp":
-            #Green
-            lcd.set_color(0.0,1.0,0.0) 
-            lcd.clear()
-            lcd.message("Temp: " + str(temp))
-         
-        if state.startswith("low"):
-            #Blue
-            lcd.set_color(0.0,0.0,1.0) 
-            lcd.clear()
-            lcd.message("Temp: " + str(temp))
-        
-        if state.startswith("high"):
-            #Red
-            lcd.set_color(1.0,0.0,0.0) 
-            lcd.clear()
-            lcd.message("Temp: " + str(temp))
+        if log_level == LogLevel.ERROR:
+            lcd.set_color(1.0, 0.0, 0.0)
+        elif log_level == LogLevel.CRIT:
+            lcd.set_color(1.0, 0.5, 0.0)
+        elif log_level == LogLevel.WARN:
+            lcd.set_color(1.0, 1.0, 0.0)
+        elif log_level == LogLevel.INFO:
+            lcd.set_color(0.0, 1.0, 0.0)
+        elif log_level == LogLevel.DEBUG:
+            lcd.set_color(0.0, 0.0, 1.0)
+        else:
+            lcd.set_color(1.0, 0.0, 1.0)
+
        
-    def log_temp(self, payload, message):
+    def log_temp(self, payload, message, log_level):
 
         time = payload['time']
         temp = payload['temp']
@@ -150,7 +154,7 @@ class LoggingService:
         
             try:
                 
-                self.log_temp_lcd(message, temp)
+                self.log_temp_lcd(message, temp, log_level)
                 
                 spreadsheet.worksheet('WaterTempProbes').append_row((time, temp, message))
                 print("Wrote temp log")
@@ -169,51 +173,76 @@ class TempMonitorService:
     print("Init " + name)
 
     dispatch = EventDispatcher()
+    
+    @event_handler("TempProbeService", "high_temp_critical")
+    def high_temp_critical_handler(self, payload):
+        print("\nHigh(Critical) temp state reached")
+
+        heaters = Relay.load_by_name("AquaOne 100W")
+        heaters[0].off()
+
+        heaters = Relay.load_by_name("AquaOne 50W")
+        heaters[0].off()
+        
+        fans = Relay.load_by_name("Refugium Fan")
+        fans[0].on()
+
+        #TODO Add code to send alert
+
 
     @event_handler("TempProbeService", "high_temp_warning")
     def high_temp_warning_handler(self, payload):
         print("\nHigh(Warning) temp state reached")
 
         heaters = Relay.load_by_name("AquaOne 100W")
-        for device in heaters:
-            if device.state == State.HIGH:
-                device.off()
+        heaters[0].off()
 
         heaters = Relay.load_by_name("AquaOne 50W")
-        for device in heaters:
-            if device.state == State.HIGH:
-                device.off()
+        heaters[0].off()
+        
+        fans = Relay.load_by_name("Refugium Fan")
+        fans[0].on()
 
 
     @event_handler("TempProbeService", "high_temp")
     def high_temp_handler(self, payload):
         print("\nHigh temp state reached")
-
         heaters = Relay.load_by_name("AquaOne 100W")
-        for device in heaters:
-            if device.state == State.HIGH:
-                device.off()
+        heaters[0].off()
 
         heaters = Relay.load_by_name("AquaOne 50W")
-        for device in heaters:
-            if device.state == State.LOW:
-                device.on()
+        heaters[0].off()
+        
+        fans = Relay.load_by_name("Refugium Fan")
+        fans[0].off()
 
+
+    @event_handler("TempProbeService", "norm_temp")
+    def norm_temp_handler(self, payload):
+        print("\nNormal temp state reached")
+        
+        heaters = Relay.load_by_name("AquaOne 100W")
+        heaters[0].off()
+
+        heaters = Relay.load_by_name("AquaOne 50W")
+        heaters[0].on()
+        
+        fans = Relay.load_by_name("Refugium Fan")
+        fans[0].off()
 
 
     @event_handler("TempProbeService", "low_temp")
     def low_temp_handler(self, payload):
         print("\nLow temp state reached")
-
+        
         heaters = Relay.load_by_name("AquaOne 100W")
-        for device in heaters:
-            if device.state == State.LOW:
-                device.on()
+        heaters[0].on()
 
         heaters = Relay.load_by_name("AquaOne 50W")
-        for device in heaters:
-            if device.state == State.HIGH:
-                device.off()
+        heaters[0].off()
+        
+        fans = Relay.load_by_name("Refugium Fan")
+        fans[0].off()
 
 
     @event_handler("TempProbeService", "low_temp_warning")
@@ -221,16 +250,29 @@ class TempMonitorService:
         print("\nLow(Warning) temp state reached")
 
         heaters = Relay.load_by_name("AquaOne 100W")
-        for device in heaters:
-            if device.state == State.LOW:
-                device.on()
+        heaters[0].on()
 
         heaters = Relay.load_by_name("AquaOne 50W")
-        for device in heaters:
-            if device.state == State.LOW:
-                device.on()
+        heaters[0].on()
+        
+        fans = Relay.load_by_name("Refugium Fan")
+        fans[0].off()
 
 
+    @event_handler("TempProbeService", "low_temp_critical")
+    def low_temp_critical_handler(self, payload):
+        print("\nLow(Critical) temp state reached")
+        
+        heaters = Relay.load_by_name("AquaOne 100W")
+        heaters[0].on()
+
+        heaters = Relay.load_by_name("AquaOne 50W")
+        heaters[0].on()
+        
+        fans = Relay.load_by_name("Refugium Fan")
+        fans[0].off()
+
+        #TODO Add code to send alert here
 
 
 
@@ -266,7 +308,7 @@ class TempProbeService:
 
         time = datetime.datetime.now()
         temp = self.get_temp()
-        state = 'log_temp'
+        state = 'norm_temp'
         print("\nProbe Time:" + str(time))
         print("Probe Temp:"+ str(temp))
         
@@ -278,7 +320,7 @@ class TempProbeService:
         elif self.low_temp_warning <= temp < self.low_temp:
             state = 'low_temp'
         elif self.low_temp <= temp < self.high_temp:
-            state = 'log_temp'
+            state = 'norm_temp'
         elif self.high_temp <= temp < self.high_temp_warning:
             state = 'high_temp'
         elif self.high_temp_warning <= temp < self.high_temp_critical:
