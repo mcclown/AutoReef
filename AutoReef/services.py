@@ -127,9 +127,9 @@ class LoggingService:
         if log_level == LogLevel.ERROR:
             lcd.set_color(1.0, 0.0, 0.0)
         elif log_level == LogLevel.CRIT:
-            lcd.set_color(1.0, 0.5, 0.0)
-        elif log_level == LogLevel.WARN:
             lcd.set_color(1.0, 1.0, 0.0)
+        elif log_level == LogLevel.WARN:
+            lcd.set_color(0.0, 1.0, 1.0)
         elif log_level == LogLevel.INFO:
             lcd.set_color(0.0, 1.0, 0.0)
         elif log_level == LogLevel.DEBUG:
