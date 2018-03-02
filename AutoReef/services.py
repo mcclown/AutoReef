@@ -11,12 +11,13 @@ from decimal import *
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import requests
 
 from nameko.rpc import rpc
 from nameko.events import EventDispatcher, event_handler
 from nameko.timer import timer
 
-from AutoReef.integrations import LogLevel, Relay, RelayMode, State, DeviceType, TempSensor, DS18B20
+from AutoReef.integrations import LogLevel, Relay, RelayMode, State, DeviceType, TempSensor, DS18B20, Canary
 from AutoReef.common import load_config
 
 import RPi.GPIO as GPIO
@@ -312,9 +313,11 @@ class TempProbeService:
         print("\nProbe Time:" + str(time))
         print("Probe Temp:"+ str(temp))
         
+        status_code = 0
 
         if temp < self.low_temp_critical:
             state = "low_temp_critical"
+            status_code = -10
         elif self.low_temp_critical <= temp < self.low_temp_warning:
             state = "low_temp_warning"
         elif self.low_temp_warning <= temp < self.low_temp:
@@ -327,7 +330,9 @@ class TempProbeService:
             state = 'high_temp_warning'
         else:
             state = 'high_temp_critical'
+            status_code = 10
        
+        Canary.still_alive(status_code)
         print("Probe State: " + state)
         self._dispatch_internal(time, temp, state)
 

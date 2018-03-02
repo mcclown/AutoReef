@@ -7,6 +7,8 @@ import time
 import threading
 from abc import ABC, abstractmethod
 import json
+import requests
+import traceback
 
 from nameko.rpc import rpc
 from nameko.timer import timer
@@ -326,5 +328,15 @@ class DS18B20(TempSensor):
             index += 1
     
         return sensor_list
+
+class Canary(object):
+
+    @staticmethod
+    def still_alive(status_code = 0):
+        
+        try:
+            r = requests.get("https://nosnch.in/966621a8ac?s="+str(status_code))
+        except Exception as e:
+            print("Error calling canary: " + traceback.format_exc())
 
 
